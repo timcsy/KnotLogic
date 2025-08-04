@@ -102,10 +102,21 @@
                 if (response.ok) {
                     const content = await response.text();
                     // 處理圖片路徑
-                    const processedContent = content.replace(/!\[\]\(imgs\//g, '![](imgs/');
+                    let processedContent = content.replace(/!\[\]\(imgs\//g, '![](imgs/');
+                    
+                    // 處理 Jekyll/Liquid 模板語法衝突
+                    // 將 {{ 和 }} 暫時替換為佔位符
+                    processedContent = processedContent.replace(/\{\{/g, '___DOUBLE_BRACE_OPEN___');
+                    processedContent = processedContent.replace(/\}\}/g, '___DOUBLE_BRACE_CLOSE___');
                     
                     const htmlContent = marked.parse(processedContent);
-                    document.getElementById('content').innerHTML = htmlContent;
+                    
+                    // 在 HTML 中恢復 {{ 和 }}
+                    const finalContent = htmlContent
+                        .replace(/___DOUBLE_BRACE_OPEN___/g, '{{')
+                        .replace(/___DOUBLE_BRACE_CLOSE___/g, '}}');
+                    
+                    document.getElementById('content').innerHTML = finalContent;
                     
                     // 等待 MathJax 載入完成後再渲染
                     function renderMath() {
