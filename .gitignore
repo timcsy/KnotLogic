@@ -1,0 +1,72 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.tmp
+*.temp
+*~
+
+# Temporary files
+*.swp
+*.swo
+*~
+.tmp
+
+# Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Log files
+*.log
+
+# Cache directories
+.cache/
+__pycache__/
+
+# Build and output directories
+build/
+dist/
+out/
+
+# Dependencies (if you add any package managers later)
+node_modules/
+venv/
+env/
+
+# LaTeX auxiliary files (in case you work with LaTeX)
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+*.out
+*.nav
+*.snm
+*.vrb
+
+# PDF files (uncomment if you don't want to track PDFs)
+# *.pdf
+
+# Large image files (uncomment if you want to ignore certain image formats)
+# *.tiff
+# *.tif
+# *.raw
+
+# System and hidden files
+.env
+.env.local
+.env.*.local
