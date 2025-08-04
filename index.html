@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knot Logic</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                formatError: (jax, err) => {
+                    // 完全忽略所有錯誤，返回原始內容
+                    console.warn('MathJax error ignored:', err.message);
+                    return jax;
+                }
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+                renderActions: {
+                    // 自定義錯誤處理
+                    addMenu: [0, '', ''],
+                    checkLoading: [1, '', ''],
+                    compile: [2, 'compile', function (doc, math, html) {
+                        try {
+                            return MathJax.tex2chtml(math.math, {display: math.display});
+                        } catch (err) {
+                            console.warn('Compile error ignored:', err.message);
+                            // 返回原始文本而不是錯誤
+                            return MathJax.startup.adaptor.text(math.math);
+                        }
+                    }]
+                }
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax is loaded with error suppression.');
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            margin: 30px 0 15px 0;
+            color: #2c3e50;
+        }
+        
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+            background: #fdf2f2;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="content">
+        <div class="loading">
+            <h2>載入中...</h2>
+            <p>正在讀取論文內容</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadContent() {
+            try {
+                const response = await fetch('KnotLogic.md');
+                if (response.ok) {
+                    const content = await response.text();
+                    // 處理圖片路徑
+                    const processedContent = content.replace(/!\[\]\(imgs\//g, '![](imgs/');
+                    
+                    const htmlContent = marked.parse(processedContent);
+                    document.getElementById('content').innerHTML = htmlContent;
+                    
+                    // 等待 MathJax 載入完成後再渲染
+                    function renderMath() {
+                        if (window.MathJax && window.MathJax.typesetPromise) {
+                            MathJax.typesetPromise([document.getElementById('content')]).then(() => {
+                                console.log('MathJax rendering completed');
+                            }).catch(function (err) {
+                                console.warn('MathJax typeset error (ignored):', err.message);
+                                // 即使有錯誤也不做任何處理，讓頁面正常顯示
+                            });
+                        } else {
+                            // 如果 MathJax 還沒載入，等待一下再試
+                            setTimeout(renderMath, 100);
+                        }
+                    }
+                    
+                    renderMath();
+                } else {
+                    document.getElementById('content').innerHTML = `
+                        <div class="error">
+                            <h2>載入錯誤</h2>
+                            <p>無法載入 KnotLogic.md 檔案</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('content').innerHTML = `
+                    <div class="error">
+                        <h2>載入錯誤</h2>
+                        <p>發生錯誤：${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadContent);
+    </script>
+</body>
+</html>
