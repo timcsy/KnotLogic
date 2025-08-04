@@ -1,0 +1,23 @@
+{
+  "name": "knotlogic-converter",
+  "version": "1.0.0",
+  "description": "Convert KnotLogic.md to HTML with MathJax support",
+  "main": "convert.js",
+  "scripts": {
+    "convert": "node convert.js",
+    "serve": "python3 -m http.server 8000",
+    "start": "npm run convert && npm run serve"
+  },
+  "dependencies": {
+    "marked": "^9.1.6"
+  },
+  "author": "timcsy",
+  "license": "MIT",
+  "keywords": [
+    "markdown",
+    "html",
+    "mathjax",
+    "knot-logic",
+    "converter"
+  ]
+}

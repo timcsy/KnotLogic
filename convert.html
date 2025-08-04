@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knot Logic - 轉換工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                formatError: (jax, err) => {
+                    console.warn('MathJax error ignored:', err.message);
+                    return jax;
+                }
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                ready: () => {
+                    console.log('MathJax is loaded with error suppression.');
+                    MathJax.startup.defaultReady();
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            margin: 30px 0 15px 0;
+            color: #2c3e50;
+        }
+        
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0 10px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        #output {
+            display: none;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Knot Logic Markdown 轉 HTML 工具</h1>
+    
+    <div class="controls">
+        <button id="convertBtn" class="btn">轉換 KnotLogic.md 為 HTML</button>
+        <button id="downloadBtn" class="btn" style="display:none;">下載 HTML 檔案</button>
+        <div id="status"></div>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        let convertedHTML = '';
+        
+        async function convertMarkdownToHTML() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            try {
+                statusDiv.innerHTML = '<div class="info">正在載入 KnotLogic.md...</div>';
+                
+                const response = await fetch('KnotLogic.md');
+                if (!response.ok) {
+                    throw new Error('無法載入 KnotLogic.md 檔案');
+                }
+                
+                const content = await response.text();
+                statusDiv.innerHTML = '<div class="info">正在轉換 Markdown...</div>';
+                
+                // 處理圖片路徑
+                let processedContent = content.replace(/!\[\]\(imgs\//g, '![](imgs/');
+                
+                // 處理 Jekyll/Liquid 模板語法衝突
+                processedContent = processedContent.replace(/\{\{/g, '___DOUBLE_BRACE_OPEN___');
+                processedContent = processedContent.replace(/\}\}/g, '___DOUBLE_BRACE_CLOSE___');
+                
+                // 轉換為 HTML
+                const htmlContent = marked.parse(processedContent);
+                
+                // 恢復花括號
+                const finalContent = htmlContent
+                    .replace(/___DOUBLE_BRACE_OPEN___/g, '{{')
+                    .replace(/___DOUBLE_BRACE_CLOSE___/g, '}}');
+                
+                // 創建完整的 HTML 文檔
+                convertedHTML = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knot Logic</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                formatError: (jax, err) => {
+                    console.warn('MathJax error ignored:', err.message);
+                    return jax;
+                }
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    // 自動渲染數學公式
+                    MathJax.typesetPromise().catch(err => console.warn('Math rendering error:', err));
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            margin: 30px 0 15px 0;
+            color: #2c3e50;
+        }
+        
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        p { margin: 15px 0; }
+        ul, ol { margin: 15px 0; padding-left: 30px; }
+        li { margin: 8px 0; }
+        
+        blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin: 20px 0;
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        pre {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+${finalContent}
+</body>
+</html>`;
+                
+                statusDiv.innerHTML = '<div class="success">轉換完成！HTML 檔案已準備好下載。</div>';
+                downloadBtn.style.display = 'inline-block';
+                
+                // 顯示部分輸出預覽
+                outputDiv.style.display = 'block';
+                outputDiv.textContent = convertedHTML.substring(0, 1000) + '...\\n\\n[完整內容可通過下載按鈕獲取]';
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">轉換失敗: ${error.message}</div>`;
+                console.error('轉換錯誤:', error);
+            }
+        }
+        
+        function downloadHTML() {
+            if (!convertedHTML) {
+                alert('請先轉換 Markdown 檔案');
+                return;
+            }
+            
+            const blob = new Blob([convertedHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'KnotLogic.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        document.getElementById('convertBtn').addEventListener('click', convertMarkdownToHTML);
+        document.getElementById('downloadBtn').addEventListener('click', downloadHTML);
+    </script>
+</body>
+</html>
